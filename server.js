@@ -24,89 +24,92 @@ app.use(express.json())
 //   console.log("done")
 // }
 const mergebranch = async (publishbranch, codebranch, manual) => {
-  await createnewbranch(publishbranch)
-  const { stdout } = await exec(`git status`);
-  if (stdout.includes('Unmerged paths')) {
-    await exec(`git checkout --theirs .`)
-    await exec('git add .')
-    console.log("added file");
-    if (stdout.trim() === '') {
-      console.log("no changes to commit:")
-      return;
+    await createnewbranch(publishbranch)
+    const { stdout } = await exec(`git status`);
+    if (stdout.includes('Unmerged paths')) {
+        await exec(`git checkout --theirs .`)
+        await exec('git add .')
+        console.log("added file");
+        if (stdout.trim() === '') {
+            console.log("no changes to commit:")
+            return;
+        }
+        await exec(`git commit -m "sfsf"`);
+        console.log("commited ");
     }
-    await exec(`git commit -m "sfsf"`);
-    console.log("commited ");
-  }
-  try {
-    await exec(`git pull origin ${manual}`);
-    console.log(`pulled from ${manual} to ${publishbranch}`)
-  } catch (error) {
-    if (error.stdout.includes('CONFLICT')) {
-      await exec(`git checkout --theirs .`)
-      await exec('git add .')
-      console.log("added file");
-      if (stdout.trim() === '') {
-        console.log("no changes to commit:")
-        return;
-      }
-      await exec(`git commit -m "sfsf"`);
-      console.log("commited ");
-    } else {
-      console.log(error)
+    try {
+        await exec(`git pull origin ${manual}`);
+        console.log(`pulled from ${manual} to ${publishbranch}`)
+    } catch (error) {
+        if (error.stdout.includes('CONFLICT')) {
+            await exec(`git checkout --theirs .`)
+            await exec('git add .')
+            console.log("added file");
+            if (stdout.trim() === '') {
+                console.log("no changes to commit:")
+                return;
+            }
+            await exec(`git commit -m "sfsf"`);
+            console.log("commited ");
+        } else {
+            console.log(error)
+        }
     }
-  }
-  await exec(`git push origin ${publishbranch}`)
-  console.log(`pushed from ${manual} to ${publishbranch}`)
-  try {
-    await exec(`git pull origin ${codebranch}`);
-    console.log(`pulled from ${codebranch} to ${publishbranch}`)
-  } catch (error) {
-    if (error.stdout.includes('CONFLICT')) {
-      await exec(`git checkout --theirs .`)
-      await exec('git add .')
-      console.log("added file");
-      if (stdout.trim() === '') {
-        console.log("no changes to commit:")
-        return;
-      }
-      await exec(`git commit -m "sfsf"`);
-      console.log("commited");
-    } else {
-      console.log(error)
+    await exec(`git push origin ${publishbranch}`)
+    console.log(`pushed from ${manual} to ${publishbranch}`)
+    try {
+        await exec(`git pull origin ${codebranch}`);
+        console.log(`pulled from ${codebranch} to ${publishbranch}`)
+    } catch (error) {
+        if (error.stdout.includes('CONFLICT')) {
+            await exec(`git checkout --theirs .`)
+            await exec('git add .')
+            console.log("added file");
+            if (stdout.trim() === '') {
+                console.log("no changes to commit:")
+                return;
+            }
+            await exec(`git commit -m "sfsf"`);
+            console.log("commited");
+        } else {
+            console.log(error)
+        }
     }
-  }
-  await exec(`git push origin ${publishbranch}`)
-  console.log(`pushed from ${codebranch} to ${publishbranch}`)
-  console.log("main branch updated.")
+    await exec(`git push origin ${publishbranch}`)
+    console.log(`pushed from ${codebranch} to ${publishbranch}`)
+    console.log("main branch updated.")
 }
 
 const createnewbranch = async (branchname) => {
     try {
-      await exec(`git branch ${branchname}`);
-      console.log(`branch created name: ${branchname}`)
+        await exec(`git branch ${branchname}`);
+        console.log(`branch created name: ${branchname}`)
     } catch (error) {
-      if (error.stderr.includes("fatal")) {
-        console.log(`already exit branch: ${branchname}`)
-      }
-  
+        if (error.stderr.includes("fatal")) {
+            console.log(`already exit branch: ${branchname}`)
+        }
+
     }
     await exec(`git checkout ${branchname}`);
     console.log(`switched to branch ${branchname}`)
-  }
-  app.get("/merge", async (req, res) => {
-    const publishbranch = 'fourth';
+}
+app.get("/merge", async (req, res) => {
+    const currentDate = new Date();
+    const year = currentDate.getFullYear();
+    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+    const day = currentDate.getDate().toString().padStart(2, '0');
+    
+    const publishbranch = `${year}-${month}-${day}`;
     const manual = "first";
     const codebranch = "second";
-    const branchname = "third";
-    // await createnewbranch(branchname)
     await mergebranch(publishbranch, codebranch, manual)
-  
+
     // await mergebranch(publishbranch, codebranch, manual)
     // schedule.scheduleJob('2 18 * * *', async () => {
     //   await mergebranch(publishbranch, codebranch, manual)
     // });
     res.send("done ")
-  })
-  app.listen(3000, () => {
+})
+app.listen(3000, () => {
     console.log("the server is runnning on port 3000")
-  })
+})
